@@ -6,23 +6,24 @@ from datetime import datetime
 from meteostat import Point, Daily
 from datetime import datetime
 import csv
-import itertools
-import sys
-from IPython.display import display
+from geopy.geocoders import Nominatim
+
 
 
 #extract all exif data
 def exif_data_extract(filename):
     phoneImage = Image.open(filename)
     exif = {}
-    for key,value in phoneImage._getexif().items():
-        index = TAGS.get(key)
+    if phoneImage._getexif() != None:
+        for key,value in phoneImage._getexif().items():
+            index = TAGS.get(key)
 
-        if index == "GPSInfo":
-            exif[index] = gpsDictGPSInformation(value)
-        else:
-            exif[index] = value
-    return exif
+            if index == "GPSInfo":
+                exif[index] = gpsDictGPSInformation(value)
+            else:
+                exif[index] = value
+        return exif
+    return None
 
 #specifically extract Geolocation Data
 def gpsDictGPSInformation(value):
@@ -81,30 +82,47 @@ def image_metadata_to_json(images_folder):
         filepath = os.path.join(os.path.dirname(images_folder), filename)
         if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png'):
                 file_table = exif_data_extract(filepath)
-                file_table['latitude_decimal'] = getDecimalCoordinates(file_table)[0]
-                file_table['longitude_decimal'] = getDecimalCoordinates(file_table)[1]
-                del file_table["GPSInfo"]
+                if file_table != None:
+                    print(filename)
+                    if getDecimalCoordinates(file_table) != None:
+                        file_table['latitude_decimal'] = getDecimalCoordinates(file_table)[0]
+                        file_table['longitude_decimal'] = getDecimalCoordinates(file_table)[1]
+                    del file_table["GPSInfo"]
 
-                #deleting makernote key in table due to clean up data
-                if 'MakerNote' in file_table:
-                    del file_table["MakerNote"]
+                    #deleting makernote key in table due to clean up data
+                    if 'MakerNote' in file_table:
+                        del file_table["MakerNote"]
 
-                weather = weather_by_month_2023(file_table)
-                file_table['Average 2023 Daily Temperature'] = weather[0]
-                file_table['Average 2023 Daily Min Temperature'] = weather[1]
-                file_table['Average 2023 Daily Max Temperature'] = weather[2]
+                    weather = weather_by_month_2023(file_table)
+                    file_table['Average 2023 Daily Temperature'] = weather[0]
+                    file_table['Average 2023 Daily Min Temperature'] = weather[1]
+                    file_table['Average 2023 Daily Max Temperature'] = weather[2]
 
-                for key in file_table.keys():
-                    if type(file_table[key]) in [TiffImagePlugin.IFDRational]:
-                        file_table[key] = float(file_table[key]._numerator / file_table[key]._denominator)
-                    if type(file_table[key]) in [bytes]:
-                        file_table[key] = "N/A"
-                    if type(file_table[key]) in [tuple]:
-                        for i in file_table[key]:
-                            if type(i) in [TiffImagePlugin.IFDRational]:
-                                i = float(i._numerator / i._denominator)
-                    
-                exif_table[filename] = file_table
+                    geolocator = Nominatim(user_agent ="EpiNu")
+                    latitude = str(file_table['latitude_decimal'])
+                    longitude = str(file_table['longitude_decimal'])
+
+                    location = geolocator.reverse(latitude+","+longitude)
+                    #location = geolocator.reverse(str(file_table['latitude_decimal'])+","+ str(file_table['longitude_decimal']))
+                    address = location.raw['address']
+
+                    city = address.get('city', '')
+                    country = address.get('country', '')
+                    state = address.get('state', '')
+
+                    file_table["nearby_city"] = city
+                    file_table["country"] = country
+                    for key in file_table.keys():
+                        if type(file_table[key]) in [TiffImagePlugin.IFDRational]:
+                            file_table[key] = float(file_table[key]._numerator / file_table[key]._denominator)
+                        if type(file_table[key]) in [bytes]:
+                            file_table[key] = "N/A"
+                        if type(file_table[key]) in [tuple]:
+                            for i in file_table[key]:
+                                if type(i) in [TiffImagePlugin.IFDRational]:
+                                    i = float(i._numerator / i._denominator)
+                        
+                    exif_table[filename] = file_table
     #with open(os.path.dirname(__file__) + "/images.csv", 'wb') as f:
     #    f = csv.DictWriter(sys.stdout, keys)  
     #    for key,val in sorted(exif_table.items()):
