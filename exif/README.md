@@ -1,2 +1,0 @@
--Add images to the "images" folder and run the exif_test.pyfile
--Results shown in images.csv file
