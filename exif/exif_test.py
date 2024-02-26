@@ -1,12 +1,15 @@
 from PIL import Image, TiffImagePlugin
 from PIL.ExifTags import TAGS, GPSTAGS
 import os
+import pandas as pd
 from datetime import datetime
 from meteostat import Point, Daily
 from datetime import datetime
 import csv
 import itertools
 import sys
+from IPython.display import display
+
 
 #extract all exif data
 def exif_data_extract(filename):
@@ -100,19 +103,21 @@ def image_metadata_to_json(images_folder):
                         for i in file_table[key]:
                             if type(i) in [TiffImagePlugin.IFDRational]:
                                 i = float(i._numerator / i._denominator)
-                    print(type(file_table[key]))
                     
                 exif_table[filename] = file_table
-    with open(os.path.dirname(__file__) + "/images.csv", 'wb') as f:
-        f = csv.DictWriter(sys.stdout, keys)  
-        for key,val in sorted(exif_table.items()):
-            row = {'images': key}
-            row.update(val)
-            f.writerow(row)
+    #with open(os.path.dirname(__file__) + "/images.csv", 'wb') as f:
+    #    f = csv.DictWriter(sys.stdout, keys)  
+    #    for key,val in sorted(exif_table.items()):
+    #        row = {'images': key}
+    #        row.update(val)
+    #        f.writerow(row)
+    
+    df = pd.DataFrame.from_dict(exif_table, orient='index')
+    df.to_csv(os.path.dirname(__file__) + '/images.csv', sep='\t')
 
 #concatenates the filepath of images with the absolute directory of the exif_test file
 images_folder = os.path.join(os.path.dirname(__file__), "images")
-file = image_metadata_to_json(images_folder)
+image_metadata_to_json(images_folder)
 
 
 
