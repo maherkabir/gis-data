@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import datetime
 from meteostat import Point, Daily
 from datetime import datetime
+import matplotlib.pyplot as plt
 import csv
 from geopy.geocoders import Nominatim
 
@@ -68,7 +69,6 @@ def weather_by_month_2023(exif_table):
         #find nearest weather station to coordinates and 2023 weather data to a DataFrame
         data = Daily(latLon, start, end)
         data = data.normalize().aggregate(freq='1D').fetch()
-
         return (data['tavg'].mean(), data['tmin'].mean(),  data['tmax'].mean())
 
 #this iterates through all the files in the images directory and gets the latitude and longitude of the files
@@ -103,7 +103,6 @@ def image_metadata_to_json(images_folder):
                     longitude = str(file_table['longitude_decimal'])
 
                     location = geolocator.reverse(latitude+","+longitude)
-                    #location = geolocator.reverse(str(file_table['latitude_decimal'])+","+ str(file_table['longitude_decimal']))
                     address = location.raw['address']
 
                     city = address.get('city', '')
@@ -123,12 +122,6 @@ def image_metadata_to_json(images_folder):
                                     i = float(i._numerator / i._denominator)
                         
                     exif_table[filename] = file_table
-    #with open(os.path.dirname(__file__) + "/images.csv", 'wb') as f:
-    #    f = csv.DictWriter(sys.stdout, keys)  
-    #    for key,val in sorted(exif_table.items()):
-    #        row = {'images': key}
-    #        row.update(val)
-    #        f.writerow(row)
     
     df = pd.DataFrame.from_dict(exif_table, orient='index')
     df.to_csv(os.path.dirname(__file__) + '/images.csv', sep='\t')
