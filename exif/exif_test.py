@@ -69,7 +69,7 @@ def weather_by_month_2023(exif_table):
         #find nearest weather station to coordinates and 2023 weather data to a DataFrame
         data = Daily(latLon, start, end)
         data = data.normalize().aggregate(freq='1D').fetch()
-        return (data['tavg'].mean(), data['tmin'].mean(),  data['tmax'].mean())
+        return (data['tavg'].mean(), data['tmin'].mean(),  data['tmax'].mean(), data['prcp'].mean())
 
 #this iterates through all the files in the images directory and gets the latitude and longitude of the files
 def image_metadata_to_json(images_folder):
@@ -99,6 +99,7 @@ def image_metadata_to_json(images_folder):
                         file_table['Average 2023 Daily Temperature'] = weather[0]
                         file_table['Average 2023 Daily Min Temperature'] = weather[1]
                         file_table['Average 2023 Daily Max Temperature'] = weather[2]
+                        file_table['Average 2023 Daily Rainfall'] = weather[3]
 
                         geolocator = Nominatim(user_agent ="EpiNu")
                         latitude = str(file_table['latitude_decimal'])
