@@ -108,9 +108,11 @@ def image_metadata_to_json(images_folder):
                         address = location.raw['address']
 
                         city = address.get('city', '')
+                        state = address.get('state', '')
                         country = address.get('country', '')
 
                         file_table["nearby_city"] = city
+                        file_table["state"] = state
                         file_table["country"] = country
                         
                     exif_table[filename] = file_table
