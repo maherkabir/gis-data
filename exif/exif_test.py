@@ -96,10 +96,10 @@ def image_metadata_to_json(images_folder):
 
                     weather = weather_by_month_2023(file_table)
                     if weather != None:
-                        file_table['Average 2023 Daily Temperature'] = weather[0]
-                        file_table['Average 2023 Daily Min Temperature'] = weather[1]
-                        file_table['Average 2023 Daily Max Temperature'] = weather[2]
-                        file_table['Average 2023 Daily Rainfall'] = weather[3]
+                        file_table['Average 2023 Daily Temperature (Celsius)f'] = weather[0]
+                        file_table['Average 2023 Daily Min Temperature (Celsius)'] = weather[1]
+                        file_table['Average 2023 Daily Max Temperature (Celsius)'] = weather[2]
+                        file_table['Average 2023 Daily Rainfall (mm) '] = weather[3]
 
                         geolocator = Nominatim(user_agent ="EpiNu")
                         latitude = str(file_table['latitude_decimal'])
